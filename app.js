@@ -1,4 +1,4 @@
-// Theme Toggle Engine
+// --- Theme Controller Script ---
 const themeToggle = document.getElementById('themeToggle');
 const currentTheme = localStorage.getItem('theme') || 'light';
 
@@ -20,7 +20,7 @@ themeToggle.addEventListener('click', () => {
     }
 });
 
-// Navigation Controllers
+// --- Navigation Controller Elements ---
 const urlTabBtn = document.getElementById('urlTabBtn');
 const qrTabBtn = document.getElementById('qrTabBtn');
 const urlForm = document.getElementById('urlForm');
@@ -43,7 +43,7 @@ qrTabBtn.addEventListener('click', () => {
     resultDiv.style.display = 'none';
 });
 
-// Central Threat Scanner Engine
+// --- Core Threats Parsing Heuristic Engine ---
 function inspectUrlPathAndDomain(urlObject) {
     const domain = urlObject.hostname.toLowerCase();
     const pathname = urlObject.pathname.toLowerCase();
@@ -58,7 +58,7 @@ function inspectUrlPathAndDomain(urlObject) {
                                domain.endsWith(brand + '.net') ||
                                domain.endsWith('.' + brand + '.com');
             if (!isOfficial) {
-                findings.push("Contains brand name '" + brand + "' outside official company domain infrastructure.");
+                findings.push("Contains protected brand name '" + brand + "' outside official company domain infrastructure.");
             }
         }
     }
@@ -69,24 +69,26 @@ function inspectUrlPathAndDomain(urlObject) {
 
     const shorteners = ['bit.ly', 'goo.gl', 't.co', 'tinyurl.com', 'is.gd', 'buff.ly', 'adf.ly', 'lnkd.in'];
     if (shorteners.includes(domain)) {
-        findings.push("⚠️ URL Obfuscation: Uses a link shortener. Hidden final location.");
+        findings.push("⚠️ URL Obfuscation Vector: This uses a link shortener service. The true endpoint location remains masked until visited.");
     }
 
     const dangerousExtensions = ['.exe', '.scr', '.bat', '.apk', '.vbs', '.msi', '.cmd', '.zip', '.iso'];
     for (let j = 0; j < dangerousExtensions.length; j++) {
         if (pathname.endsWith(dangerousExtensions[j])) {
-            findings.push("🚨 CRITICAL ALERT: Directly targets downloadable executable payload (" + dangerousExtensions[j] + ").");
+            findings.push("🚨 CRITICAL ALERT: Link directs straight to a terminal downloadable payload object (" + dangerousExtensions[j] + ").");
         }
     }
 
     return findings;
 }
 
+// Global output evaluation logic 
 function processAndDisplayUrl(inputUrl) {
     try {
         const parsedUrl = new URL(inputUrl);
         const structuralWarnings = inspectUrlPathAndDomain(parsedUrl);
 
+        // Clear marketing telemetry trackers parameters
         const trackingParams = ['fbclid', 'gclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'affiliate', 'ref'];
         for (let k = 0; k < trackingParams.length; k++) {
             parsedUrl.searchParams.delete(trackingParams[k]);
@@ -104,19 +106,19 @@ function processAndDisplayUrl(inputUrl) {
             reportHtml += '</ul>';
         } else {
             resultDiv.className = 'clean';
-            reportHtml += '✅ Structural analysis clears the link core framework.';
+            reportHtml += '✅ Structural analysis clears the link root domain and download signature framework.';
         }
 
-        reportHtml += '<br><br><strong>Extracted & Sanitized URL:</strong><div class="box">' + sanitizedUrl + '</div>';
+        reportHtml += '<br><br><strong>Extracted/Sanitized URL (Trackers Cleared):</strong><div class="box">' + sanitizedUrl + '</div>';
         resultDiv.innerHTML = reportHtml;
 
     } catch (err) {
         resultDiv.className = 'warning';
-        resultDiv.innerText = 'Error: Valid complete web address required (including https://).';
+        resultDiv.innerText = 'Error: The text extracted or pasted is not a valid complete link (must include https:// or http://). Text found: ' + inputUrl;
     }
 }
 
-// Form Triggers
+// --- Submit Forms Listeners ---
 urlForm.addEventListener('submit', function(e) {
     e.preventDefault();
     const inputUrl = document.getElementById('targetUrl').value.trim();
@@ -133,7 +135,7 @@ qrForm.addEventListener('submit', function(e) {
 
     resultDiv.style.display = 'block';
     resultDiv.className = 'box';
-    resultDiv.innerText = 'Processing matrix data layer...';
+    resultDiv.innerText = 'Compressing image and decoding matrix data...';
 
     const file = fileInput.files[0];
     const reader = new FileReader();
@@ -143,22 +145,45 @@ qrForm.addEventListener('submit', function(e) {
         img.onload = function() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
             
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, imageData.width, imageData.height);
-
-            if (code) {
-                processAndDisplayUrl(code.data);
+            // Fixed mobile resolution engine compressor
+            // Limits maximum scale bounds to 500px to ensure lightning-fast image processing
+            const maxDimension = 500;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > height) {
+                if (width > maxDimension) {
+                    height *= maxDimension / width;
+                    width = maxDimension;
+                }
             } else {
+                if (height > maxDimension) {
+                    width *= maxDimension / height;
+                    height = maxDimension;
+                }
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            try {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                if (code && code.data) {
+                    processAndDisplayUrl(code.data);
+                } else {
+                    resultDiv.className = 'warning';
+                    resultDiv.innerText = '🚨 Scan Failed: Could not read a valid QR matrix pattern. Make sure the QR code is centered, well-lit, and not blurry.';
+                }
+            } catch (canvasErr) {
                 resultDiv.className = 'warning';
-                resultDiv.innerText = '🚨 Error: Unable to read valid QR matrix coordinates.';
+                resultDiv.innerText = 'Security sandbox restriction: ' + canvasErr.message;
             }
         };
         img.src = event.target.result;
     };
     reader.readAsDataURL(file);
 });
-
