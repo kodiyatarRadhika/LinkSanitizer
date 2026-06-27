@@ -114,7 +114,7 @@ function processAndDisplayUrl(inputUrl) {
 
     } catch (err) {
         resultDiv.className = 'warning';
-        resultDiv.innerText = 'Error: The text extracted or pasted is not a valid complete link (must include https:// or http://). Text found: ' + inputUrl;
+        resultDiv.innerText = 'Scan Complete: Found text payload instead of a standard URL path link. Text Content: "' + inputUrl + '"';
     }
 }
 
@@ -142,24 +142,25 @@ qrForm.addEventListener('submit', function(e) {
 
     reader.onload = function(event) {
         const img = new Image();
+        
+        // Define the entire processing workflow BEFORE assigning src to bypass browser rendering races
         img.onload = function() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Fixed mobile resolution engine compressor
-            // Limits maximum scale bounds to 500px to ensure lightning-fast image processing
-            const maxDimension = 500;
+            // Scaled compression boundary framework
+            const maxDimension = 600;
             let width = img.width;
             let height = img.height;
             
             if (width > height) {
                 if (width > maxDimension) {
-                    height *= maxDimension / width;
+                    height = Math.round(height * (maxDimension / width));
                     width = maxDimension;
                 }
             } else {
                 if (height > maxDimension) {
-                    width *= maxDimension / height;
+                    width = Math.round(width * (maxDimension / height));
                     height = maxDimension;
                 }
             }
@@ -176,14 +177,23 @@ qrForm.addEventListener('submit', function(e) {
                     processAndDisplayUrl(code.data);
                 } else {
                     resultDiv.className = 'warning';
-                    resultDiv.innerText = '🚨 Scan Failed: Could not read a valid QR matrix pattern. Make sure the QR code is centered, well-lit, and not blurry.';
+                    resultDiv.innerText = '🚨 Scan Failed: Could not read a valid QR matrix pattern. Make sure the image contains a clear, flat, well-lit QR code without severe glare.';
                 }
             } catch (canvasErr) {
                 resultDiv.className = 'warning';
-                resultDiv.innerText = 'Security sandbox restriction: ' + canvasErr.message;
+                resultDiv.innerText = 'Sandbox restriction error: ' + canvasErr.message;
             }
         };
+
+        img.onerror = function() {
+            resultDiv.className = 'warning';
+            resultDiv.innerText = '🚨 Error: Failed to process this image file type format.';
+        };
+
+        // Assign src here so it fires sequentially after handlers are attached
         img.src = event.target.result;
     };
+
     reader.readAsDataURL(file);
 });
+        
