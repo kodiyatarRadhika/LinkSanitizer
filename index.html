@@ -51,7 +51,6 @@
         ul { margin: 5px 0 0 20px; padding: 0; }
         .hidden { display: none; }
     </style>
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
@@ -82,7 +81,10 @@
     <div id="result"></div>
 </div>
 
-<!-- Connect the logic file -->
+<!-- 1. The QR Decoder engine library loads first -->
+<script src="https://jsdelivr.net"></script>
+
+<!-- 2. Your custom application security script executes only after dependencies load -->
 <script src="app.js"></script>
 </body>
 </html>
